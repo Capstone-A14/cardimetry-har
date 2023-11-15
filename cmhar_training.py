@@ -1,6 +1,7 @@
 from sklearn import svm, metrics
 from sklearn.model_selection import train_test_split
 
+import matplotlib.pyplot as plt
 import pickle
 import yaml
 
@@ -121,6 +122,12 @@ for label in cmhar_labels:
 
 
 # Calculate accuracy
+# cm = []
 for label in cmhar_labels:
     y_pred = cmhar_clf[label].predict(X_test[label])
+    # cm.append(metrics.confusion_matrix(y_test[label], y_pred))
     print(f'{label} accuracy: {metrics.accuracy_score(y_test[label], y_pred)}')
+
+# disp = metrics.ConfusionMatrixDisplay(confusion_matrix=cm[1], display_labels=[0, 1])
+# disp.plot()
+# plt.show()
