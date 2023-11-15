@@ -1,79 +1,11 @@
 from sklearn import svm, metrics
 from sklearn.model_selection import train_test_split
+from data.cmhar_funcs import *
 
+import numpy as np
+import matplotlib.pyplot as plt
 import pickle
 import yaml
-
-
-
-# Labels and features
-cmhar_labels    = ['L-Si', 'Si-L', 'Si-St', 'St-Si', 'Walk', 'Fall']
-cmhar_feats     = [
-    'rms_qw', 'rms_qx', 'rms_qy', 'rms_qz',
-    'median_qw', 'median_qx', 'median_qy', 'median_qz', 
-    'cov_ww', 'cov_wx', 'cov_wy', 'cov_wz', 'cov_xx', 'cov_xy', 'cov_xz', 'cov_yy', 'cov_yz', 'cov_zz',
-    'relent_w', 'relent_x', 'relent_y', 'relent_z'
-]
-
-
-
-# Read all the features .yaml
-cmhar_features = {}
-
-for label in cmhar_labels:
-    cmhar_features[label] = []
-
-    file_path = f'data/ExtFeat/{label}_feats.yaml'
-    with open(file_path, 'r') as file:
-        data = yaml.safe_load(file)
-
-    for i in range(len(data['rms_qw'])):
-        point = []
-
-        for feat in cmhar_feats:
-            point.append(data[feat][i])
-
-        cmhar_features[label].append(point)
-
-
-
-# Configure the datasets for one-to-rest SVM model
-cmhar_data = {}
-
-for label_base in cmhar_labels:
-    cmhar_data[label_base] = {'data': [], 'target': []}
-
-    for label_other in cmhar_labels:
-        data_len = len(cmhar_features[label_other])
-        cmhar_data[label_base]['data'] += cmhar_features[label_other]
-
-        if label_base == label_other:
-            cmhar_data[label_base]['target'] += [1 for __ in range(data_len)]
-
-        else:
-            cmhar_data[label_base]['target'] += [0 for __ in range(data_len)]
-
-
-
-# Split dataset into training and test set
-X_train = {}
-X_test  = {}
-y_train = {}
-y_test  = {}
-
-for label in cmhar_labels:
-    X_train[label]  = None
-    X_test[label]   = None
-    y_train[label]  = None
-    y_test[label]   = None
-
-    X_train[label], X_test[label], y_train[label], y_test[label] = train_test_split(
-        cmhar_data[label]['data'], 
-        cmhar_data[label]['target'], 
-        test_size       = 0.3,
-        train_size      = 0.7,
-        random_state    = 69
-    )
 
 
 
@@ -89,7 +21,53 @@ cmhar_clf = {
 
 
 
-# Calculate accuracy
-for label in cmhar_labels:
-    y_pred = cmhar_clf[label].predict(X_test[label])
-    print(f'{label} accuracy: {metrics.accuracy_score(y_test[label], y_pred)}')
+# Read actual data taken
+actual_data = np.loadtxt(
+    fname       = 'data/Actual/har_dataset0.csv',
+    delimiter   = ','
+).T
+
+
+
+# Feature extraction
+rms = cmharCalcRms(actual_data)
+med = cmharCalcMedian(actual_data)
+cov = cmharCalcCovariance(actual_data)
+
+
+
+# Convert to points
+points = []
+for i in range(len(rms)):
+    point   = []
+    point   += list(rms[i]) + list(med[i]) + list(cov[i])
+    points.append(point)
+
+
+
+# Pass to model
+iterate     = []
+lsi_preds   = []
+sil_preds   = []
+sist_preds  = []
+stsi_preds  = []
+walk_preds  = []
+fall_preds  = []
+for i in range(len(points)):
+    iterate.append(i)
+    lsi_preds.append(cmhar_clf['L-Si'].predict([points[i]]))
+    sil_preds.append(cmhar_clf['Si-L'].predict([points[i]]))
+    sist_preds.append(cmhar_clf['Si-St'].predict([points[i]]))
+    stsi_preds.append(cmhar_clf['St-Si'].predict([points[i]]))
+    walk_preds.append(cmhar_clf['Walk'].predict([points[i]]))
+    fall_preds.append(cmhar_clf['Fall'].predict([points[i]]))
+
+
+plt.plot(iterate, lsi_preds, label='L-Si')
+plt.plot(iterate, sil_preds, label='Si-L')
+plt.plot(iterate, sist_preds, label='Si-St')
+plt.plot(iterate, stsi_preds, label='St-Si')
+plt.plot(iterate, walk_preds, label='Walk')
+plt.plot(iterate, fall_preds, label='Fall')
+plt.legend()
+plt.show()

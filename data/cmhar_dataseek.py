@@ -11,7 +11,7 @@ QX_DATA     = 2
 QY_DATA     = 3
 QZ_DATA     = 4
 
-cmhar_labels    = ['L-Si', 'Si-L', 'Si-St', 'St-Si', 'Walk', 'Fall']
+cmhar_labels    = ['L-Si', 'Si-L', 'Si-St', 'St-Si', 'Walk', 'Fall', 'Actual']
 cmhar_datasets  = {}
 
 
