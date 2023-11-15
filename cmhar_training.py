@@ -1,8 +1,7 @@
 from sklearn import svm, metrics
 from sklearn.model_selection import train_test_split
 
-import numpy as np
-import matplotlib.pyplot as plt
+import pickle
 import yaml
 
 
@@ -83,37 +82,41 @@ cmhar_clf = {
     'L-Si'  : svm.SVC(
         kernel  ='rbf',
         degree  = 4,
-        gamma   = 10
+        gamma   = 16
     ),
     'Si-L'  : svm.SVC(
         kernel  ='rbf',
         degree  = 4,
-        gamma   = 10
+        gamma   = 7.5
     ),
     'Si-St' : svm.SVC(
         kernel  ='rbf',
         degree  = 4,
-        gamma   = 10
+        gamma   = 19
     ),
     'St-Si' : svm.SVC(
         kernel  ='rbf',
         degree  = 4,
-        gamma   = 10
+        gamma   = 14
     ),
     'Walk'  : svm.SVC(
         kernel  ='rbf',
         degree  = 4,
-        gamma   = 10
+        gamma   = 9
     ),
     'Fall'  : svm.SVC(
         kernel  ='rbf',
         degree  = 4,
-        gamma   = 10
+        gamma   = 9
     )
 }
 
 for label in cmhar_labels:
     cmhar_clf[label].fit(X_train[label], y_train[label])
+
+    file_name = f'model/{label}_model.sav'
+    pickle.dump(cmhar_clf[label], open(file_name, 'wb'))
+
 
 
 
